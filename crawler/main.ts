@@ -6,17 +6,15 @@ import puppeteer from 'puppeteer';
     const page = await browser.newPage();
     await page.goto('https://www.s-manga.net/newcomics/index.html');
 
-    const comicsTitleSelector = '#article-kami > h2';
-    await getTextWithSelector(page, comicsTitleSelector);
+    const selectors = [
+        '#article-kami > h2',
+        '#article-kami > section.card-outer.ジャンプコミックス.ssboy.ssgirl > div > section:nth-child(2) > div > h4 > a > b',
+        '#article-kami > section.card-outer.ジャンプコミックス.ssboy.ssgirl > div > section:nth-child(3) > div > h4 > a > b'
+    ] as string[];
 
-    const selector =
-        '#article-kami > section.card-outer.ジャンプコミックス.ssboy.ssgirl > div > section:nth-child(2) > div > h4 > a > b';
-    await getTextWithSelector(page, selector);
-
-    const selector2 =
-        '#article-kami > section.card-outer.ジャンプコミックス.ssboy.ssgirl > div > section:nth-child(3) > div > h4 > a > b';
-
-    await getTextWithSelector(page, selector2);
+    for await (const selector of selectors) {
+        await getTextWithSelector(page, selector);
+    }
 
     await browser.close();
 })();
@@ -34,6 +32,7 @@ async function getTextWithSelector(
     const value = await (
         await elementHandle?.getProperty('textContent')
     )?.jsonValue();
+
     console.log('value: ', value);
     return value as string;
 }
