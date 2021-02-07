@@ -23,7 +23,7 @@ import puppeteer from 'puppeteer';
 
 /**
  * Returns textContents gained from HTML selected by given selector.
- * @param {*} page // puppeteer.Browser
+ * @param {*} page // puppeteer.Page
  * @param {*} selector // string
  */
 async function getTextWithSelector(
