@@ -6,8 +6,12 @@ import puppeteer from 'puppeteer';
     const page = await browser.newPage();
     await page.goto('https://www.s-manga.net/newcomics/index.html');
 
+    // gain data title
+    const dataTitleSelector = '#article-kami > h2';
+    await getTextWithSelector(page, dataTitleSelector);
+
+    // gain comic title
     const selectors = [
-        '#article-kami > h2',
         '#article-kami > section.card-outer.ジャンプコミックス.ssboy.ssgirl > div > section:nth-child(2) > div > h4 > a > b',
         '#article-kami > section.card-outer.ジャンプコミックス.ssboy.ssgirl > div > section:nth-child(3) > div > h4 > a > b'
     ] as string[];
