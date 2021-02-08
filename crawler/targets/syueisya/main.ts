@@ -1,6 +1,8 @@
 import puppeteer from 'puppeteer';
+const FileSystem = require('fs');
 
 (async () => {
+    const comicData = [];
     const browser = await puppeteer.launch();
 
     const page = await browser.newPage();
@@ -10,18 +12,31 @@ import puppeteer from 'puppeteer';
     const dataTitleSelector = '#article-kami > h2';
     const title = await getTitle(page, dataTitleSelector);
 
-    // gain comic title
-    const selectors = [
-        'ジャンプコミックス',
-        'ヤングジャンプコミックス',
-        'マーガレットコミックス'
-    ] as string[];
+    // gain comic title and url and img
+    const selectors = JSON.parse(
+        FileSystem.readFileSync('targets/syueisya/target-categories.json')
+    );
 
     for await (const selector of selectors) {
         const comics = await getTextWithSelector(page, selector);
-        console.log('selector: ', selector);
-        console.log('comics: ', comics);
+        const target = {
+            category: selector,
+            comics: comics
+        };
+        comicData.push(target);
     }
+
+    const data = {
+        title: title,
+        data: comicData
+    };
+
+    // output as json
+    FileSystem.writeFile(
+        'targets/syueisya/data/paper-comics-releases.json',
+        JSON.stringify(data),
+        () => {}
+    );
 
     await browser.close();
 })();
@@ -53,26 +68,26 @@ async function getTextWithSelector(
     const comics: { title: string; url: string; img: string }[] = [];
 
     for (let i = 2; i < 1000; i++) {
-        const comicTitleSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > div > h4 > a > b`;
-        const comicUrlSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > figure > a`;
-        const comicImgSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > figure > a > img`;
+        const titleSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > div > h4 > a > b`;
+        const urlSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > figure > a`;
+        const imgSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > figure > a > img`;
 
-        const titleHandler = await page?.$(comicTitleSelector);
-        const urlHandler = await page?.$(comicUrlSelector);
-        const imgHandler = await page?.$(comicImgSelector);
+        const titleHandler = await page?.$(titleSelector);
+        const urlHandler = await page?.$(urlSelector);
+        const imgHandler = await page?.$(imgSelector);
 
-        const comicTitle = await getContent(titleHandler, 'textContent');
-        const comicUrl = await getContent(urlHandler, 'href');
-        const comicImg = await getContent(imgHandler, 'href');
+        const title = await getContent(titleHandler, 'textContent');
+        const url = await getContent(urlHandler, 'href');
+        const img = await getContent(imgHandler, 'src');
 
-        if (comicTitle === undefined || comicTitle === null) {
+        if (title === undefined || title === null) {
             return comics;
         }
 
         const comic = {
-            title: comicTitle as string,
-            url: comicUrl as string,
-            img: comicImg as string ?? null
+            title: title as string,
+            url: url as string,
+            img: img as string
         };
 
         comics.push(comic);
