@@ -72,7 +72,7 @@ async function getTextWithSelector(
         const comic = {
             title: comicTitle as string,
             url: comicUrl as string,
-            img: comicImg as string
+            img: comicImg as string ?? null
         };
 
         comics.push(comic);
