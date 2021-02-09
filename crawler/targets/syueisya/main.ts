@@ -3,7 +3,7 @@ const FileSystem = require('fs');
 
 (async () => {
     let title = '';
-    const comicData = [];
+    let comicData = [];
     const result = [];
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
@@ -32,7 +32,9 @@ const FileSystem = require('fs');
                 category: selector,
                 comics: comics
             };
-            comicData.push(target);
+            if (comics.length > 1) {
+                comicData.push(target);
+            }
         }
 
         const data = {
@@ -41,6 +43,8 @@ const FileSystem = require('fs');
         };
 
         result.push(data);
+
+        comicData = []; // reset the loop result
     }
 
     // output as json
