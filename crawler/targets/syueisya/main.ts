@@ -2,43 +2,56 @@ import puppeteer from 'puppeteer';
 const FileSystem = require('fs');
 
 (async () => {
+    let title = '';
     const comicData = [];
+    const result = [];
     const browser = await puppeteer.launch();
-
     const page = await browser.newPage();
-    await page.goto('https://www.s-manga.net/newcomics/index.html');
 
-    // gain data title
-    const dataTitleSelector = '#article-kami > h2';
-    const title = await getTitle(page, dataTitleSelector);
-
-    // gain comic title and url and img
+    // gain selector lists of categories
     const selectors = JSON.parse(
         FileSystem.readFileSync('targets/syueisya/target-categories.json')
     );
 
-    for await (const selector of selectors) {
-        const comics = await getTextWithSelector(page, selector);
-        const target = {
-            category: selector,
-            comics: comics
-        };
-        comicData.push(target);
-    }
+    // gain targetSites for visit
+    const target: { targetSites: [] } = JSON.parse(
+        FileSystem.readFileSync('targets/syueisya/target-sites.json')
+    );
 
-    const data = {
-        title: title,
-        data: comicData
-    };
+    // crawl target site and gain img,title,link
+    for await (const site of target.targetSites) {
+        await page.goto(site);
+
+        // gain data title
+        const dataTitleSelector = '#article-kami > h2';
+        title = await getTitle(page, dataTitleSelector);
+
+        for await (const selector of selectors) {
+            const comics = await getTextWithSelector(page, selector);
+            const target = {
+                category: selector,
+                comics: comics
+            };
+            comicData.push(target);
+        }
+
+        const data = {
+            title: title,
+            data: comicData
+        };
+
+        result.push(data);
+    }
 
     // output as json
     FileSystem.writeFile(
         'targets/syueisya/data/paper-comics-releases.json',
-        JSON.stringify(data),
+        JSON.stringify(result),
         () => {}
     );
 
     await browser.close();
+    console.log('SUCCESSFULLY PROGRAM EXECUTED');
 })();
 
 /**
@@ -71,14 +84,24 @@ async function getTextWithSelector(
         const titleSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > div > h4 > a > b`;
         const urlSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > figure > a`;
         const imgSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > figure > a > img`;
+        const dateSelector = `#article-kami > section.card-outer.${selector} > div > section:nth-child(${i}) > div > p:nth-child(${3})`;
 
         const titleHandler = await page?.$(titleSelector);
         const urlHandler = await page?.$(urlSelector);
         const imgHandler = await page?.$(imgSelector);
+        const dateHandler = await page?.$(dateSelector);
 
         const title = await getContent(titleHandler, 'textContent');
         const url = await getContent(urlHandler, 'href');
         const img = await getContent(imgHandler, 'src');
+
+        let date = await getContent(dateHandler, 'textContent');
+        if (date !== undefined) {
+            date = date.replace('発売', '');
+            date = date.replace('日', '');
+            date = date.replace('年', '/');
+            date = date.replace('月', '/');
+        }
 
         if (title === undefined || title === null) {
             return comics;
@@ -87,7 +110,8 @@ async function getTextWithSelector(
         const comic = {
             title: title as string,
             url: url as string,
-            img: img as string
+            img: img as string,
+            date: date as string
         };
 
         comics.push(comic);
