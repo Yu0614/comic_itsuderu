@@ -1,2 +1,5 @@
 crawler/targets/syueisya/data/paper-comics-releases.json
 log/mysql/mysqld.log
+node_modules
+
+.docker/mysql/log/mysql/mysqld.log
