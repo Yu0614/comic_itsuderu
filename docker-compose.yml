@@ -18,8 +18,8 @@ services:
             - ./.docker/mysql/conf.d:/etc/mysql/conf.d # MySQLの基本設定(文字化け対策)
             - ./.docker/mysql/log/mysql:/var/log/mysql # ログの保存
         networks:
-          - back_bridge
+            - back_bridge
 
 networks:
-  back_bridge:
-    external: true
+    back_bridge:
+        external: true

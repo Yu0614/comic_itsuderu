@@ -30,7 +30,7 @@ const FileSystem = require('fs');
             const comics = await getTextWithSelector(page, selector);
             const target = {
                 category: selector,
-                comics: comics
+                comics
             };
             if (comics.length > 1) {
                 comicData.push(target);
@@ -38,7 +38,7 @@ const FileSystem = require('fs');
         }
 
         const data = {
-            title: title,
+            title,
             data: comicData
         };
 
